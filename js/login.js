@@ -106,13 +106,18 @@
 
   function normalizeUser(user) {
     if (!user || typeof user !== 'object') return null;
-    const username = String(user.username || user.name || '').trim().slice(0, 32);
+    const email = String(user.email || '').trim().toLowerCase();
+    const fromEmail = email ? email.split('@')[0] : '';
+    const username = String(user.username || user.name || fromEmail || 'PIXLECT member').trim().slice(0, 32);
     const uid = String(user.uid || user.id || '').trim();
     if (!username || !uid) return null;
-    const icon = user.icon && typeof user.icon === 'object' ? user.icon : {};
+    const icon = user.icon && typeof user.icon === 'object'
+      ? user.icon
+      : { bg: user.bg, emoji: user.emoji };
     return {
       username: username,
       uid: uid,
+      email: email,
       icon: {
         bg: typeof icon.bg === 'string' && icon.bg ? icon.bg : '#38bdf8',
         emoji: typeof icon.emoji === 'string' && icon.emoji ? icon.emoji : '👤'
@@ -174,12 +179,16 @@
 
     authPopup = popup;
     try { popup.focus(); } catch (_) {}
+    try { window.dispatchEvent(new CustomEvent('pixlect:auth-popup-opened')); } catch (_) {}
     if (popupChecker) clearInterval(popupChecker);
     popupChecker = setInterval(() => {
       if (!authPopup || authPopup.closed) {
         clearInterval(popupChecker);
         popupChecker = null;
         authPopup = null;
+        if (!currentUser) {
+          try { window.dispatchEvent(new CustomEvent('pixlect:auth-popup-closed')); } catch (_) {}
+        }
       }
     }, 500);
   }

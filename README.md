@@ -8,7 +8,9 @@ PIXLECT Chat has no local login, demo account chooser, or offline identity. Sign
 
 https://www.account.pixlect-studios.com/index.html
 
-Continue with Google on the portal. It then returns the PIXLECT profile (`uid`, `username`, `icon`) to the app with `postMessage`. The portal also offers email links, but the reliable popup handoff is Google. The app keeps that profile in `localStorage` so a refresh does not sign the user out. `js/login.js` is the complete client; there is no `login.html` fallback.
+Sign in with Google or an email link. The portal returns the PIXLECT profile (`uid`, and either `username`/`icon` or just `email`) to the app with `postMessage`; when it sends only an email, the app uses the email name as the display name.
+
+For email links, keep the account window open after requesting the link. The link opens a second account tab, which signs in and relays the result back to the open window. If you closed it, click **Sign in with PIXLECT Account** again on the chat gate — the existing portal session finishes immediately. The app keeps that profile in `localStorage` so a refresh does not sign the user out. `js/login.js` is the complete client; there is no `login.html` fallback.
 
 ### Allowed origins
 

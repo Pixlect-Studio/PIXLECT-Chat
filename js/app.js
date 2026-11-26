@@ -438,7 +438,7 @@
 
   function applyReadyState(authorized) {
     if (authorized) {
-      setGateHint('Continue with Google on www.account.pixlect-studios.com · no password stored here.', false);
+      setGateHint('Continue with Google or an email link on www.account.pixlect-studios.com · no password stored here.', false);
     } else {
       setGateHint('PIXLECT sign-in is not authorized for this address. Serve the app from localhost:8000 or a registered PIXLECT origin.', true);
     }
@@ -483,6 +483,14 @@
     });
     window.addEventListener('pixlect:auth-error', (event) => {
       if (event.detail && event.detail.message) setGateHint(event.detail.message, true);
+    });
+    window.addEventListener('pixlect:auth-popup-opened', () => {
+      if (window.PixlectAuth.user) return;
+      setGateHint('Finish in the PIXLECT window. Using an email link? Keep that window open until you click the link.', false);
+    });
+    window.addEventListener('pixlect:auth-popup-closed', () => {
+      if (window.PixlectAuth.user) return;
+      setGateHint('If you signed in by email, click Sign in with PIXLECT Account again to finish. Keep the window open until the link opens.', false);
     });
   }
 
