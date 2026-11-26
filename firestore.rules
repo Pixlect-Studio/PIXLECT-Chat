@@ -1,0 +1,58 @@
+rules_version = '2';
+
+// PIXLECT Chat — Firestore rules.
+// PIXLECT Account sign-in happens on www.account.pixlect-studios.com, which
+// is a separate Firebase project, so these rules do not have a Firebase Auth
+// user to match against. They validate shapes and keep writes narrow.
+// For access-controlled DMs, add Firebase Auth to this project and replace
+// the room/message reads with membership checks.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function validProfile() {
+      return request.resource.data.uid is string
+        && request.resource.data.username is string
+        && request.resource.data.username.size() > 0
+        && request.resource.data.username.size() <= 32
+        && request.resource.data.emoji is string
+        && request.resource.data.color is string;
+    }
+
+    function validRoom() {
+      return request.resource.data.type in ['channel', 'dm']
+        && request.resource.data.members is list
+        && request.resource.data.members.size() <= 2
+        && request.resource.data.lastMessage is string
+        && request.resource.data.lastMessage.size() <= 160;
+    }
+
+    function validMessage() {
+      return request.resource.data.uid is string
+        && request.resource.data.name is string
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 4000
+        && request.resource.data.ts is int;
+    }
+
+    match /users/{uid} {
+      allow read: if true;
+      allow create, update: if request.resource.data.uid == uid && validProfile();
+      allow delete: if false;
+    }
+
+    match /rooms/{roomId} {
+      allow read: if true;
+      allow create, update: if validRoom();
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if true;
+        allow create: if validMessage();
+        allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']);
+        allow delete: if false;
+      }
+    }
+  }
+}
